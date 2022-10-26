@@ -37,18 +37,36 @@ function diplayProductData(productData){
             <option value="${productData.colors[i]}">${productData.colors[i]}</option>`;
     }
 }
+let errorMessage;
+function alertMessage(container){
+    errorMessage = container.innerHTML += `<p>Veuillez modifier cette erreur</p>`;
+    errorMessage.style.color = 'red';
+}
 
-//User set color and quantity
+//User set color
 let colorEl = document.getElementById('colors');
 let selectedColor;
+let colorIsValid = false;
+
 colorEl.addEventListener('change',function(e){
-    selectedColor = e.target.value;
+    selectedColor = colorEl.value;
+    if(selectedColor){
+        colorIsValid = true;
+        console.log('color is valid')
+    }
 })
 
+//User set quantity
 const quantityEl = document.getElementById('quantity');
 let selectedQuantity;
+let quantityIsValid = false;
+
 quantityEl.addEventListener('change',function(e){
-    selectedQuantity = e.target.value;
+    selectedQuantity = quantityEl.value;
+    if(selectedQuantity <= 100 && selectedQuantity > 0){
+        quantityIsValid = true;
+        console.log('quantity is valid')
+    }
 });
 
 //Create product object and User send object to localStorage by pressing button addToCart
@@ -57,7 +75,6 @@ let product;
 
 addToCart.addEventListener('click', (e) => {
     e.preventDefault();
-
     createProduct();
     addProductToCart();
     addCartToLocalStorage();
