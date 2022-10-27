@@ -1,4 +1,4 @@
-//if there is no cart in localStorage, create it.
+//if there is no cart in localStorage, create it before adding any product.
 let cart = [];
 if(!localStorage.getItem('cart')){
   cartLinea = JSON.stringify(cart)
@@ -6,7 +6,6 @@ if(!localStorage.getItem('cart')){
 } else {
     cart = JSON.parse(localStorage.getItem('cart'));
 }
-console.log('What was in the localStorage = cart : ' + localStorage.getItem('cart'))
 
 //Get product ID from URL
 const url = new URL(window.location.href);
@@ -20,14 +19,14 @@ fetch("http://localhost:3000/api/products/"+ productId)
     }
 })
 .then(productData =>{
-    diplayProductData(productData);
+    displayProductData(productData)
 })
 .catch(error => {
     console.log('Une erreur est survenue');
 })
 
 //Display productData in the DOM
-function diplayProductData(productData){
+function displayProductData(productData){
     document.getElementsByClassName('item__img')[0].innerHTML=`<img src="${productData.imageUrl}" alt="${productData.altTxt}">`;
     document.getElementById('title').textContent = productData.name;
     document.getElementById('price').textContent = productData.price;
@@ -37,11 +36,7 @@ function diplayProductData(productData){
             <option value="${productData.colors[i]}">${productData.colors[i]}</option>`;
     }
 }
-let errorMessage;
-function alertMessage(container){
-    errorMessage = container.innerHTML += `<p>Veuillez modifier cette erreur</p>`;
-    errorMessage.style.color = 'red';
-}
+let globalErrorMessage;
 
 //User set color
 let colorEl = document.getElementById('colors');
@@ -49,10 +44,16 @@ let selectedColor;
 let colorIsValid = false;
 
 colorEl.addEventListener('change',function(e){
-    selectedColor = colorEl.value;
-    if(selectedColor){
+    selectedColor = e.target.value;
+    if(selectedColor != ''){
         colorIsValid = true;
-        console.log('color is valid')
+        colorEl.style.borderColor = 'transparent';
+        if(globalErrorMessage){
+            globalErrorMessage.remove();
+        }
+        console.log('color is valid')}
+    if(selectedColor == '' || selectedColor == '--SVP, choisissez une couleur --'){
+        colorIsValid = false;
     }
 })
 
@@ -65,9 +66,20 @@ quantityEl.addEventListener('change',function(e){
     selectedQuantity = quantityEl.value;
     if(selectedQuantity <= 100 && selectedQuantity > 0){
         quantityIsValid = true;
+        quantityEl.style.borderColor = 'transparent';
+        if(globalErrorMessage){
+            globalErrorMessage.remove();
+        }
+        
         console.log('quantity is valid')
     }
 });
+
+//Quantity and color error message.
+function requiredElement(domElement){
+    domElement.setAttribute('required', '');
+    domElement.style.borderColor = 'red';
+}
 
 //Create product object and User send object to localStorage by pressing button addToCart
 const addToCart = document.getElementById('addToCart');
@@ -75,17 +87,36 @@ let product;
 
 addToCart.addEventListener('click', (e) => {
     e.preventDefault();
-    createProduct();
-    addProductToCart();
-    addCartToLocalStorage();
-    console.log('In the cart :' + cart);
+    if(!quantityIsValid){
+        requiredElement(quantityEl)
+    }
+
+    if(!colorIsValid){
+        requiredElement(colorEl)
+    }
+
+    if(quantityIsValid && colorIsValid){
+        createProduct();
+        addProductToCart();
+        addCartToLocalStorage();
+        console.log('In the cart :' + cart);
+    } else {
+        let formEl = document.getElementsByClassName('item__content')[0];
+        globalErrorMessage = document.createElement('p')
+        globalErrorMessage.setAttribute('id','globalErrorMessage')
+        globalErrorMessage.textContent = 'Veuillez modifier les champs en rouge.';
+        formEl.appendChild(globalErrorMessage).style.color = 'red';
+    }
+    
 })
 
 function createProduct(){
     product = {
         id: productId,
         color: selectedColor,
-        quantity: selectedQuantity
+        quantity: selectedQuantity;
+        price : ,
+        description: ,
     }
 }
 
@@ -101,7 +132,6 @@ function addProductToCart(){
     } else {
         cart.push(product);
     }
-    console.log(cart);
 }
 
 function addCartToLocalStorage() {
