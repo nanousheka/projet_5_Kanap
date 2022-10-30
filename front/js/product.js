@@ -1,8 +1,9 @@
-//if there is no cart in localStorage, create it before adding any product.
 let cart = [];
+
+//if there is no cart in localStorage, create it before adding any product.
 if(!localStorage.getItem('cart')){
-  cartLinea = JSON.stringify(cart)
-  localStorage.setItem('cart',cartLinea)  
+    cartLinea = JSON.stringify(cart)
+    localStorage.setItem('cart',cartLinea)  
 } else {
     cart = JSON.parse(localStorage.getItem('cart'));
 }
@@ -19,23 +20,27 @@ fetch("http://localhost:3000/api/products/"+ productId)
     }
 })
 .then(productData =>{
+    //Display productData in the DOM
     displayProductData(productData)
 })
 .catch(error => {
     console.log('Une erreur est survenue');
 })
 
-//Display productData in the DOM
 function displayProductData(productData){
     document.getElementsByClassName('item__img')[0].innerHTML=`<img src="${productData.imageUrl}" alt="${productData.altTxt}">`;
     document.getElementById('title').textContent = productData.name;
     document.getElementById('price').textContent = productData.price;
     document.getElementById('description').textContent = productData.description;
     for(i = 0 ; i< productData.colors.length ; i++){
-        document.getElementById('colors').innerHTML += `
-            <option value="${productData.colors[i]}">${productData.colors[i]}</option>`;
+        let colorOption = document.createElement('option');
+        colorOption.setAttribute('value',productData.colors[i]);
+        colorOption.textContent = productData.colors[i];
+        document.getElementById('colors').appendChild(colorOption)
     }
 }
+/*On submit button, this message is displayed under button
+if both or one of color or quantity selection is invalid.*/
 let globalErrorMessage;
 
 //User set color
@@ -75,18 +80,19 @@ quantityEl.addEventListener('change',function(e){
     }
 });
 
-//Quantity and color error message.
+//Quantity or color error message displayed under input.
 function requiredElement(domElement){
     domElement.setAttribute('required', '');
     domElement.style.borderColor = 'red';
 }
 
 //Create product object and User send object to localStorage by pressing button addToCart
+
 const addToCart = document.getElementById('addToCart');
-let product;
 
 addToCart.addEventListener('click', (e) => {
     e.preventDefault();
+
     if(!quantityIsValid){
         requiredElement(quantityEl)
     }
@@ -96,10 +102,28 @@ addToCart.addEventListener('click', (e) => {
     }
 
     if(quantityIsValid && colorIsValid){
-        createProduct();
-        addProductToCart();
+        let product = {
+            id : productId,
+            color : selectedColor,
+            quantity : selectedQuantity
+        }
+
+        if (cart.length <= 0){
+            cart.push(product);
+        }else { 
+            if(cart.find(e => e.id == productId) && cart.find(e => e.color == selectedColor)){
+                for(i = 0 ; i < cart.length ; i++){
+                    if(cart[i].id == productId && cart[i].color == selectedColor){
+                        cart[i].quantity = parseInt(cart[i].quantity) + parseInt(selectedQuantity)
+                    }
+                }
+            } else {cart.push(product);}  
+        }
+        
         addCartToLocalStorage();
-        console.log('In the cart :' + cart);
+        console.log(product);
+        console.log(cart);
+        
     } else {
         let formEl = document.getElementsByClassName('item__content')[0];
         globalErrorMessage = document.createElement('p')
@@ -107,32 +131,7 @@ addToCart.addEventListener('click', (e) => {
         globalErrorMessage.textContent = 'Veuillez modifier les champs en rouge.';
         formEl.appendChild(globalErrorMessage).style.color = 'red';
     }
-    
 })
-
-function createProduct(){
-    product = {
-        id: productId,
-        color: selectedColor,
-        quantity: selectedQuantity;
-        price : ,
-        description: ,
-    }
-}
-
-//This function check if product is already in cart. If true, adjust quantity otherwise push product to cart.
-function addProductToCart(){
-    if(cart.length >= 1 && cart.find(cartElement => cartElement.id === productId) && cart.find(cartElement => cartElement.color === selectedColor)){
-        for(i = 0 ; i < cart.length ; i++){
-            if(cart[i].id === productId && cart[i].color === selectedColor){
-                let newCount = parseInt(cart[i].quantity) + parseInt(product.quantity);
-                cart[i].quantity = newCount.toString();
-            }
-        }
-    } else {
-        cart.push(product);
-    }
-}
 
 function addCartToLocalStorage() {
     const cartLinea = JSON.stringify(cart);

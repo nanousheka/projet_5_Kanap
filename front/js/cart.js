@@ -1,120 +1,133 @@
 //get all items from 'cart' localStorage in a variable
 let cart = JSON.parse(localStorage.getItem('cart'));
 
+
+
+console.log(cart);
+
 //Create DOM elements
 const cartContainer = document.getElementById('cart__items');
 
 //Display the items in the DOM.
 for(i= 0; i< cart.length; i++){
-    productId = cart[i].id;
-    fetch("http://localhost:3000/api/products/" + productId)
-    .then(res =>{
-        if (res.ok) {
-        return res.json();
-        }
-    })
-    .then(productData =>{
-        //Create and send product from server to localStorage.
-        let product = {
-            id: productId,
-            image : productData.imageUrl,
-            altTxt : productData.altTxt,
-            price: productData.price,
-            name: productData.name
-        }
-        productLinea = JSON.stringify(product);
-        localStorage.setItem('product',productLinea);
-    })
-    .catch(error => {
-        console.log('Une erreur est survenue');
-    })
 
-    let product = JSON.parse(localStorage.getItem('product'));
-
-    const productEl = document.createElement('article');
-    
-    productEl.classList.add('cart__item');
-    productEl.setAttribute('data-id',`${product.id}`);
-    productEl.setAttribute('data-color',`${cart[i].color}`);
-    cartContainer.appendChild(productEl);
-
-        const cartItemImg = document.createElement('div');
-        cartItemImg.classList.add('cart__item__img');
-        productEl.appendChild(cartItemImg);
-
-            const productImg = document.createElement('img');
-            productImg.setAttribute('src',`${product.image}`);
-            productImg.setAttribute('alt',`${product.altTxt}`);
-            cartItemImg.appendChild(productImg);
-
-        const cartItemContent = document.createElement('div');
-        cartItemContent.classList.add('cart__item__content');
-        productEl.appendChild(cartItemContent);
+    if(cart[i].quantity > 0){
+        fetch("http://localhost:3000/api/products/" + cart[i].id)
         
+        .then(res =>{
+            if (res.ok) {
+            return res.json();
+            }
+        })
+        .then(productData =>{
+            //Create and send product from server to localStorage.
+            displayProductData(productData)
+        })
+        .catch(error => {
+            console.log('Une erreur est survenue');
+        })
 
-            const cartItemContentDescription = document.createElement('div');
-            cartItemContentDescription.classList.add('cart__item__content__description');
-            cartItemContent.appendChild(cartItemContentDescription);
-
-                const cartItemContentDescriptionH2 = document.createElement('h2');
-                cartItemContentDescriptionH2.textContent = product.name;
-                cartItemContentDescription.appendChild(cartItemContentDescriptionH2);
-
-                const cartItemContentDescriptionP1 = document.createElement('p');
-                cartItemContentDescriptionP1.textContent = `Couleur : ${cart[i].color}`;
-                cartItemContentDescription.appendChild(cartItemContentDescriptionP1);
-
-                const cartItemContentDescriptionP2 = document.createElement('p');
-                cartItemContentDescriptionP2.textContent ='Prix : ' + product.price + '€';
-                cartItemContentDescription.appendChild(cartItemContentDescriptionP2);
-
-            const cartItemContentSettings = document.createElement('div');
-            cartItemContentSettings.classList.add('cart__item__content__settings');
-            cartItemContent.appendChild(cartItemContentSettings);
+        
+            const productEl = document.createElement('article');
             
-                const cartItemContentSettingsQuantity = document.createElement('div');
-                cartItemContentSettingsQuantity.classList.add('cart__item__content__settings__quantity');
-                cartItemContentSettings.appendChild(cartItemContentSettingsQuantity);
-                console.log(cartItemContentSettingsQuantity);
-                    const cartItemContentSettingsQuantityP = document.createElement('p');
-                    cartItemContentSettingsQuantityP.textContent = 'Qté : '
-                    cartItemContentSettingsQuantity.appendChild(cartItemContentSettingsQuantityP);
+            productEl.classList.add('cart__item');
+            productEl.setAttribute('data-id',`${cart[i].id}`);
+            productEl.setAttribute('data-color',`${cart[i].color}`);
+            cartContainer.appendChild(productEl);
 
-                    const cartItemContentSettingsQuantityInput = document.createElement('input');
-                    cartItemContentSettingsQuantity.appendChild(cartItemContentSettingsQuantityInput);
+            const cartItemImg = document.createElement('div');
+            cartItemImg.classList.add('cart__item__img');
+            productEl.appendChild(cartItemImg);
+
+                const productImg = document.createElement('img');
+                cartItemImg.appendChild(productImg);
+
+            const cartItemContent = document.createElement('div');
+            cartItemContent.classList.add('cart__item__content');
+            productEl.appendChild(cartItemContent);
+            
+
+                const cartItemContentDescription = document.createElement('div');
+                cartItemContentDescription.classList.add('cart__item__content__description');
+                cartItemContent.appendChild(cartItemContentDescription);
+
+                    const cartItemContentDescriptionH2 = document.createElement('h2');
+                    cartItemContentDescription.appendChild(cartItemContentDescriptionH2);
+
+                    const cartItemContentDescriptionP1 = document.createElement('p');
+                    cartItemContentDescriptionP1.textContent = `Couleur : ${cart[i].color}`;
+                    cartItemContentDescription.appendChild(cartItemContentDescriptionP1);
+
+                    const cartItemContentDescriptionP2 = document.createElement('p');
+                    cartItemContentDescription.appendChild(cartItemContentDescriptionP2);
+
+                const cartItemContentSettings = document.createElement('div');
+                cartItemContentSettings.classList.add('cart__item__content__settings');
+                cartItemContent.appendChild(cartItemContentSettings);
+                
+                    const cartItemContentSettingsQuantity = document.createElement('div');
+                    cartItemContentSettingsQuantity.classList.add('cart__item__content__settings__quantity');
+                    cartItemContentSettings.appendChild(cartItemContentSettingsQuantity);
+                    
+                        const cartItemContentSettingsQuantityP = document.createElement('p');
+                        cartItemContentSettingsQuantityP.textContent = 'Qté : '
+                        cartItemContentSettingsQuantity.appendChild(cartItemContentSettingsQuantityP);
+
+                        const cartItemContentSettingsQuantityInput = document.createElement('input');
+                        cartItemContentSettingsQuantityInput.classList.add('itemQuantity');
+                        cartItemContentSettingsQuantityInput.setAttribute('name','itemQuantity');
+                        cartItemContentSettingsQuantityInput.setAttribute('type','number');
+                        cartItemContentSettingsQuantityInput.setAttribute('min','1');
+                        cartItemContentSettingsQuantityInput.setAttribute('max','100');
+                        cartItemContentSettingsQuantityInput.setAttribute('value',`${cart[i].quantity}`);
+                        cartItemContentSettingsQuantity.appendChild(cartItemContentSettingsQuantityInput);
 
 
-                const cartItemContentSettingsDelete = document.createElement('div');
-                cartItemContentSettings.appendChild(cartItemContentSettingsDelete);
-                    const cartItemContentSettingsDeleteP = document.createElement('p');
-                    cartItemContentSettingsDelete.appendChild(cartItemContentSettingsDeleteP);
-    
-    /*function displayProductData(productData){
-        productImage = document.getElementById('product__img');
-        productImage.setAttribute('src',`${productData.imageUrl}`);
-        productImage.setAttribute('alt',`${productData.altTxt}`);
-    }*/
+                    const cartItemContentSettingsDelete = document.createElement('div');
+                    cartItemContentSettingsDelete.classList.add('cart__item__content__settings__delete');
+                    cartItemContentSettings.appendChild(cartItemContentSettingsDelete);
+                    
+                        const cartItemContentSettingsDeleteP = document.createElement('p');
+                        cartItemContentSettingsDeleteP.setAttribute('id','delete' + i)
+                        cartItemContentSettingsDeleteP.textContent = 'Supprimer';
+                        cartItemContentSettingsDelete.appendChild(cartItemContentSettingsDeleteP);
+
+        //Caught other data from server and add to DOM.
+        function displayProductData(productData){
+            productImg.setAttribute('src',productData.imageUrl);
+            productImg.setAttribute('alt',productData.altTxt);
+            cartItemContentDescriptionH2.textContent = productData.name;
+            cartItemContentDescriptionP2.textContent ='Prix : ' + productData.price + '€';
+        }
+
+        cartItemContentSettingsDeleteP.addEventListener('click',(e) => {
+            cart[i].quantity = 0;
+            let cartLinea = JSON.stringify(cart);
+            localStorage.setItem('cart', cartLinea);
+        })
+        console.log(cart[i].quantity)
+    }
 }
-/*<article class="cart__item" data-id="{product-ID}" data-color="{product-color}">
-    <div class="cart__item__img">
-        <img src="../images/product01.jpg" alt="Photographie d'un canapé">
-    </div>
-    <div class="cart__item__content">
-        <div class="cart__item__content__description">
-            <h2>Nom du produit</h2>
-            <p>Vert</p>
-            <p>42,00 €</p>
-        </div>
-        <div class="cart__item__content__settings">
-            <div class="cart__item__content__settings__quantity">
-                <p>Qté : </p>
-                <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="42">
-            </div>
-            <div class="cart__item__content__settings__delete">
-                <p class="deleteItem">Supprimer</p>
-            </div>
-        </div>
-    </div>
-</article>*/
+/*let  cartProductId = cart[i].id;
+let cartProductColor = cart[i].color;
+let cartProductQuantity = cart[i].quantity;
+let indexOfCartProduct = cart.indexOf(cart[i]);
+console.log(cartProductId)*/
 
-//Display the items in the DOM.
+//Delete cart product
+/*-Parcourir le cart
+-Si le produit dans le cart a la même couleur et le même I
+-Retirer le produit de l'array du cart.*/
+ 
+//let productIndex = cart.indexOf(cart[i])
+/*If()
+For (let ii = 0;ii<cart.length;ii++){
+    if(cart[i].includes(productId) && cart[i].includes(cart[i].color)){
+        productIndex = cart.indexOf(cart[i])
+        cart.splice(productIndex,1);
+        let cartLinea = JSON.stringify(cart);
+        localStorage.setItem('cart',cartLinea);
+    }
+} 
+//console.log(cart)
+//console.log(localStorage.getItem('cart'))*/
