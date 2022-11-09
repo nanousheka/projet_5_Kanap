@@ -1,3 +1,4 @@
+//====================================DISPLAY CART=====================================
 //get all items from 'cart' localStorage in a variable
 let cart;
 let productCount =  0;
@@ -19,10 +20,19 @@ const cartContainer = document.getElementById('cart__items');
 let cartItemContentSettingsDeleteP;
 let cartItemContentSettingsQuantityInput;
 
-//Display the products in the DOM.
+//============================Display the products in the DOM================================================
 getLocalStorage()
 console.log(cart);
 
+//If cart is empty
+if(cartContainer.length == 0 || !cart || cart.length == 0){
+    const emptyCartEl = document.createElement('p');
+    emptyCartEl.textContent = 'Votre panier est vide';
+    emptyCartEl.style.textAlign = 'center';
+    cartContainer.appendChild(emptyCartEl);
+}
+
+//If not empty
 for(i= 0; i< cart.length; i++){
 
     fetch("http://localhost:3000/api/products/" + cart[i].id)
@@ -116,8 +126,7 @@ for(i= 0; i< cart.length; i++){
         cartItemContentSettingsDeleteP.addEventListener('click',(e) => {
             cart = cart.filter(e => e != product)
         updateLocalStorage()
-        console.log(product)
-        console.log(cart)
+        location.reload()
     })
     }
     removeProduct(cart[i])
@@ -127,6 +136,7 @@ for(i= 0; i< cart.length; i++){
         cartItemContentSettingsQuantityInput.addEventListener('change', (event) =>{
             product.quantity = event.target.value;
             updateLocalStorage()
+            location.reload()
         })
         
     }
@@ -180,57 +190,55 @@ for(i = 0 ; i< cart.length ; i++){
 let contact;
 let newOrder;
 let globalErrorMessage;
-let firstNameIsValid = false;
-let firstNameRegExp;
-let lastNameIsValid = false;
-let lastNameRegExp;
-let addressIsValid = false;
-let addressRegExp;
-let cityIsValid = false;
-let cityRegExp;
-let emailIsValid = false;
-let emailRegExp;
-let formIsValid = false;
 
+//RegExp patterns.
+let firstNameIsValid = false;
+let firstNameRegExp = new RegExp("([A-ZÀ-ÿ][-,a-z. ']+[ ]*)+",'gm');
+let lastNameIsValid = false;
+let lastNameRegExp = new RegExp("([A-ZÀ-ÿ][-,a-z. ']+[ ]*)+",'gm');
+let addressIsValid = false;
+let addressRegExp = new RegExp("[A-Za-z0-9'\.\-\s\,]",'g');
+let cityIsValid = false;
+let cityRegExp = new RegExp("[A-Za-z0-9'\.\-\s\,]",'gm');
+let emailIsValid = false;
+let emailRegExp = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$",'g');
+
+//Inputs validation.
+cartOrderForm.firstName.addEventListener('change',e =>{
+    if(e.target.value.length > 0 && firstNameRegExp.test(e.target.value)){
+        document.getElementById('firstNameErrorMsg').textContent = "";
+        firstNameIsValid = true;
+    } 
+})
+cartOrderForm.lastName.addEventListener('change',e =>{
+    if(e.target.value.length > 0 && lastNameRegExp.test(e.target.value)){
+        document.getElementById('lastNameErrorMsg').textContent = "";
+        lastNameIsValid = true;
+    }
+})
+cartOrderForm.address.addEventListener('change',e =>{
+    if(e.target.value.length > 0 && addressRegExp.test(e.target.value)){
+        document.getElementById('addressErrorMsg').textContent = "";
+        addressIsValid = true;
+    }
+})
+cartOrderForm.city.addEventListener('change',e =>{
+    if(e.target.value.length > 0 && cityRegExp.test(e.target.value)){
+        document.getElementById('cityErrorMsg').textContent = "";
+        cityIsValid = true;
+    }
+})
+cartOrderForm.email.addEventListener('change',e =>{
+    if(e.target.value.length > 0 && emailRegExp.test(e.target.value)){
+        document.getElementById('emailErrorMsg').textContent = "";
+        emailIsValid = true;
+    }
+})
+
+let formIsValid = false;
 
 orderBtn.addEventListener('click', (e)=> {
     e.preventDefault();
-    //Inputs validation.
-    cartOrderForm.firstName.addEventListener('change',e =>{
-        firstNameRegExp = new RegExp("([A-ZÀ-ÿ][-,a-z. ']+[ ]*)+",'gm');
-        if(e.target.value.length > 0 && firstNameRegExp.test(e.target.value)){
-            document.getElementById('firstNameErrorMsg').textContent = "";
-            firstNameIsValid = true;
-        } 
-    })
-    cartOrderForm.lastName.addEventListener('change',e =>{
-        lastNameRegExp = new RegExp("([A-ZÀ-ÿ][-,a-z. ']+[ ]*)+",'gm');
-        if(e.target.value.length > 0 && lastNameRegExp.test(e.target.value)){
-            document.getElementById('lastNameErrorMsg').textContent = "";
-            lastNameIsValid = true;
-        }
-    })
-    cartOrderForm.address.addEventListener('change',e =>{
-        addressRegExp = new RegExp("[A-Za-z0-9'\.\-\s\,]",'g');
-        if(e.target.value.length > 0 && addressRegExp.test(e.target.value)){
-            document.getElementById('addressErrorMsg').textContent = "";
-            addressIsValid = true;
-        }
-    })
-    cartOrderForm.city.addEventListener('change',e =>{
-        cityRegExp = new RegExp("[A-Za-z0-9'\.\-\s\,]",'gm');
-        if(e.target.value.length > 0 && cityRegExp.test(e.target.value)){
-            document.getElementById('cityErrorMsg').textContent = "";
-            cityIsValid = true;
-        }
-    })
-    cartOrderForm.email.addEventListener('change',e =>{
-        emailRegExp = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$",'g');
-        if(e.target.value.length > 0 && emailRegExp.test(e.target.value)){
-            document.getElementById('emailErrorMsg').textContent = "";
-            emailIsValid = true;
-        }
-    })
 
     if(firstNameIsValid && lastNameIsValid && addressIsValid && cityIsValid && emailIsValid){
         formIsValid = true;
@@ -250,7 +258,6 @@ orderBtn.addEventListener('click', (e)=> {
             contact: contact,
             products: cartIds
         }
-        //
         fetch("http://localhost:3000/api/products/order", {
             method: 'POST',
             body: JSON.stringify(newOrder),
@@ -270,7 +277,7 @@ orderBtn.addEventListener('click', (e)=> {
         .catch(error => {
             console.log('Une erreur est survenue')
         });
-        console.log(newOrder);
+    //Warnings
     } else{
         globalErrorMessage = document.createElement('p');
         globalErrorMessage.textContent = 'Veuillez modifier le formulaire.';

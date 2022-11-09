@@ -89,6 +89,24 @@ function requiredElement(domElement){
 //Create product object and User send object to localStorage by pressing button addToCart
 
 const addToCart = document.getElementById('addToCart');
+let itemContent = document.getElementsByClassName('item__content')[0];
+let addToCartMessageEl;
+function addToCartValidationMessage(){
+    addToCartMessageEl = document.createElement('p')
+    addToCartMessageEl.textContent = 'Votre produit a été ajouté avec succès au panier';
+    addToCartMessageEl.style.color = '#fbbcbc',
+    itemContent.appendChild(addToCartMessageEl)
+    quantityEl.addEventListener('change', function(e){
+        e.preventDefault();
+        addToCartMessageEl.textContent = '';
+    })
+    colorEl.addEventListener('change', function(e){
+        e.preventDefault();
+        addToCartMessageEl.textContent = '';
+    })
+
+}
+
 
 addToCart.addEventListener('click', (e) => {
     e.preventDefault();
@@ -110,14 +128,22 @@ addToCart.addEventListener('click', (e) => {
 
         if (cart.length <= 0){
             cart.push(product);
+            addToCartValidationMessage()
+            
         }else { 
             if(cart.find(e => e.id == productId) && cart.find(e => e.color == selectedColor)){
                 for(i = 0 ; i < cart.length ; i++){
                     if(cart[i].id == productId && cart[i].color == selectedColor){
                         cart[i].quantity = parseInt(cart[i].quantity) + parseInt(selectedQuantity)
                     }
+                    if(addToCartMessageEl){
+                        addToCartMessageEl.remove()
+                    };
+                    addToCartValidationMessage()
                 }
-            } else {cart.push(product);}  
+            } else {
+                cart.push(product);
+                addToCartValidationMessage();}  
         }
         
         addCartToLocalStorage();
