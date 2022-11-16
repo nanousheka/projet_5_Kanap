@@ -21,7 +21,8 @@ fetch("http://localhost:3000/api/products/"+ productId)
 })
 .then(productData =>{
     //Display productData in the DOM
-    displayProductData(productData)
+    displayProductData(productData);
+    selectColor(productData);
 })
 .catch(error => {
     console.log('Une erreur est survenue');
@@ -47,23 +48,23 @@ let globalErrorMessage;
 let colorEl = document.getElementById('colors');
 let selectedColor;
 let colorIsValid = false;
-
-colorEl.addEventListener('change',function(e){
+let colorErrorMessage = document.createElement('p');
+function selectColor(productData){
+    colorEl.addEventListener('change',function(e){
     selectedColor = e.target.value;
-    if(selectedColor != ''){
+    if(globalErrorMessage)
+        {globalErrorMessage.remove();}
+    if(productData.colors.find(e => e = selectedColor)){
         colorIsValid = true;
         colorEl.style.borderColor = 'transparent';
-        if(globalErrorMessage){
-            globalErrorMessage.remove();
-        }
-        console.log('color is valid')}
-    if(selectedColor == '' || selectedColor == '--SVP, choisissez une couleur --'){
-        colorIsValid = false;
-    }
-})
+        console.log('color is valid')
+    }else{colorIsValid = false;}
+    })  
+}
 
 //User set quantity
 const quantityEl = document.getElementById('quantity');
+quantityEl.setAttribute('onkeyup','if(this.value<0){this.value= this.value * -1}')
 let selectedQuantity;
 let quantityIsValid = false;
 
@@ -72,11 +73,10 @@ quantityEl.addEventListener('change',function(e){
     if(selectedQuantity <= 100 && selectedQuantity > 0){
         quantityIsValid = true;
         quantityEl.style.borderColor = 'transparent';
+        console.log('quantity is valid')
         if(globalErrorMessage){
             globalErrorMessage.remove();
         }
-        
-        console.log('quantity is valid')
     }
 });
 
@@ -86,6 +86,7 @@ function requiredElement(domElement){
     domElement.style.borderColor = 'red';
 }
 
+
 //Create product object and User send object to localStorage by pressing button addToCart
 
 const addToCart = document.getElementById('addToCart');
@@ -94,7 +95,7 @@ let addToCartMessageEl;
 function addToCartValidationMessage(){
     addToCartMessageEl = document.createElement('p')
     addToCartMessageEl.textContent = 'Votre produit a été ajouté avec succès au panier';
-    addToCartMessageEl.style.color = '#fbbcbc',
+    addToCartMessageEl.style.color = 'red',
     itemContent.appendChild(addToCartMessageEl)
     quantityEl.addEventListener('change', function(e){
         e.preventDefault();
@@ -108,15 +109,17 @@ function addToCartValidationMessage(){
 }
 
 
+let formEl = document.getElementsByClassName('item__content')[0];
+
 addToCart.addEventListener('click', (e) => {
     e.preventDefault();
-
+    if(globalErrorMessage)
+    {globalErrorMessage.remove();}
     if(!quantityIsValid){
-        requiredElement(quantityEl)
+        requiredElement(quantityEl);
     }
-
     if(!colorIsValid){
-        requiredElement(colorEl)
+        requiredElement(colorEl);
     }
 
     if(quantityIsValid && colorIsValid){
@@ -151,7 +154,6 @@ addToCart.addEventListener('click', (e) => {
         console.log(cart);
         
     } else {
-        let formEl = document.getElementsByClassName('item__content')[0];
         globalErrorMessage = document.createElement('p')
         globalErrorMessage.setAttribute('id','globalErrorMessage')
         globalErrorMessage.textContent = 'Veuillez modifier les champs en rouge.';

@@ -1,14 +1,10 @@
 //====================================DISPLAY CART=====================================
 //get all items from 'cart' localStorage in a variable
-let cart;
+let cart = JSON.parse(localStorage.getItem('cart'));;
 let productCount =  0;
 let productTotalPrice = 0;
 let orderTotalPrice = 0;
 let productPrice;
-
-function getLocalStorage(){
-    cart = JSON.parse(localStorage.getItem('cart'));
-}
 
 function updateLocalStorage(){
     let cartLinea = JSON.stringify(cart);
@@ -21,7 +17,6 @@ let cartItemContentSettingsDeleteP;
 let cartItemContentSettingsQuantityInput;
 
 //============================Display the products in the DOM================================================
-getLocalStorage()
 console.log(cart);
 
 //If cart is empty
@@ -43,7 +38,6 @@ for(i= 0; i< cart.length; i++){
         }
     })
     .then(productData =>{
-        //Create and send product from server to localStorage.
         displayProductData(productData);
         getProductPrice(productData)
     })
@@ -101,6 +95,7 @@ for(i= 0; i< cart.length; i++){
                 cartItemContentSettingsQuantityInput.setAttribute('type','number');
                 cartItemContentSettingsQuantityInput.setAttribute('min','1');
                 cartItemContentSettingsQuantityInput.setAttribute('max','100');
+                cartItemContentSettingsQuantityInput.setAttribute('onkeyup','if(this.value<0){this.value= this.value * -1}')
                 cartItemContentSettingsQuantityInput.setAttribute('value',`${cart[i].quantity}`);
                 cartItemContentSettingsQuantity.appendChild(cartItemContentSettingsQuantityInput);
 
@@ -190,12 +185,24 @@ for(i = 0 ; i< cart.length ; i++){
 let contact;
 let newOrder;
 let globalErrorMessage;
+let invalidFormMessage;
+let invalidCartMessage;
+function displayGlobalErrorMessage(error, message){
+    if(!error){
+        globalErrorMessage = document.createElement('p');
+        globalErrorMessage.textContent = message;
+        globalErrorMessage.style.color = 'red';
+        cartOrderForm.appendChild(globalErrorMessage);
+    }
+}
 
 //RegExp patterns.
+const namesRegExp = (value)=>{
+    return /[A-ZÀ-ÿ][-,a-z. ']+[ ]*/gm.test(value);
+};
 let firstNameIsValid = false;
-let firstNameRegExp = new RegExp("([A-ZÀ-ÿ][-,a-z. ']+[ ]*)+",'gm');
 let lastNameIsValid = false;
-let lastNameRegExp = new RegExp("([A-ZÀ-ÿ][-,a-z. ']+[ ]*)+",'gm');
+
 let addressIsValid = false;
 let addressRegExp = new RegExp("[A-Za-z0-9'\.\-\s\,]",'g');
 let cityIsValid = false;
@@ -204,47 +211,77 @@ let emailIsValid = false;
 let emailRegExp = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$",'g');
 
 //Inputs validation.
+let firstNameErrorMessage = document.getElementById('firstNameErrorMsg');
+let lastNameErrorMessage = document.getElementById('lastNameErrorMsg');
+let addressErrorMessage = document.getElementById('addressErrorMsg');
+let cityErrorMessage = document.getElementById('cityErrorMsg');
+let emailErrorMessage = document.getElementById('emailErrorMsg');
+
 cartOrderForm.firstName.addEventListener('change',e =>{
-    if(e.target.value.length > 0 && firstNameRegExp.test(e.target.value)){
-        document.getElementById('firstNameErrorMsg').textContent = "";
+    if(e.target.value.length > 0 && namesRegExp(e.target.value)){
+        console.log(namesRegExp(e.target.value))
+        firstNameErrorMessage.textContent = "";
         firstNameIsValid = true;
-    } 
+    } else{
+        firstNameErrorMessage.textContent = "Prénom invalide";
+        console.log(namesRegExp(e.target.value))
+    }
 })
 cartOrderForm.lastName.addEventListener('change',e =>{
-    if(e.target.value.length > 0 && lastNameRegExp.test(e.target.value)){
-        document.getElementById('lastNameErrorMsg').textContent = "";
+    if(e.target.value.length > 0 && namesRegExp(e.target.value)){
+        console.log(namesRegExp(e.target.value))
+        lastNameErrorMessage.textContent = "";
         lastNameIsValid = true;
+    }else {
+        lastNameErrorMessage.textContent = "Nom invalide";
     }
 })
 cartOrderForm.address.addEventListener('change',e =>{
     if(e.target.value.length > 0 && addressRegExp.test(e.target.value)){
-        document.getElementById('addressErrorMsg').textContent = "";
+        addressErrorMessage.textContent = "";
         addressIsValid = true;
+    } else{
+        addressErrorMessage.textContent = "Adresse invalide";
     }
 })
 cartOrderForm.city.addEventListener('change',e =>{
     if(e.target.value.length > 0 && cityRegExp.test(e.target.value)){
-        document.getElementById('cityErrorMsg').textContent = "";
+        cityErrorMessage.textContent = "";
         cityIsValid = true;
+    }else {
+        cityErrorMessage.textContent = "Ville invalide";
     }
 })
 cartOrderForm.email.addEventListener('change',e =>{
     if(e.target.value.length > 0 && emailRegExp.test(e.target.value)){
-        document.getElementById('emailErrorMsg').textContent = "";
+        emailErrorMessage.textContent = "";
         emailIsValid = true;
+    }else{
+        emailErrorMessage.textContent = "Email invalide";
     }
 })
 
 let formIsValid = false;
+let cartIsValid = false;
 
 orderBtn.addEventListener('click', (e)=> {
     e.preventDefault();
-
     if(firstNameIsValid && lastNameIsValid && addressIsValid && cityIsValid && emailIsValid){
         formIsValid = true;
+        invalidFormMessage.remove();
+    }else{
+        invalidFormMessage = document.createElement('p');
+        invalidFormMessage.textContent = 'Veuillez modifier le formulaire';
+        invalidFormMessage.style.color = 'red';
+        cartOrderForm.appendChild(invalidFormMessage);
     }
+
+    if(cart.length > 0){
+        cartIsValid = true;
+    }
+
     //If form is valid, create order object and send it to localhost.
-    if(formIsValid){
+    if(formIsValid  && cartIsValid){
         contact = {
             firstName : cartOrderForm.firstName.value, 
             lastName : cartOrderForm.lastName.value, 
@@ -278,26 +315,12 @@ orderBtn.addEventListener('click', (e)=> {
             console.log('Une erreur est survenue')
         });
     //Warnings
-    } else{
+    }else{
         globalErrorMessage = document.createElement('p');
-        globalErrorMessage.textContent = 'Veuillez modifier le formulaire.';
-        globalErrorMessage.style.color = '#fbbcbc';
+        globalErrorMessage.textContent = 'Votre commande n\'a pas été réalisée';
+        globalErrorMessage.style.color = 'red';
         cartOrderForm.appendChild(globalErrorMessage);
     }
 
-    if(email.value.length == 0 && emailIsValid == false){
-        document.getElementById('emailErrorMsg').textContent = 'Email invalide';
-    } 
-    if(firstName.value.length == 0 && firstNameIsValid == false){
-        document.getElementById('firstNameErrorMsg').textContent = 'Prénom invalide';
-    } 
-    if(lastName.value.length == 0 && lastNameIsValid == false){
-        document.getElementById('lastNameErrorMsg').textContent = 'Nom invalide';
-    } 
-    if(address.value.length == 0 && addressIsValid == false){
-        document.getElementById('addressErrorMsg').textContent = 'Adresse invalide';
-    } 
-    if(city.value.length == 0 && cityIsValid == false){
-        document.getElementById('cityErrorMsg').textContent = 'Ville invalide';
-    } 
+    
 })
